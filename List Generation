@@ -1,3 +1,6 @@
+const veniceColor = '#8d65db';
+const npColor = '#61b1d4';
+
 function sumQuantities(data, key) {
   return Object.values(data.reduce((acc, item) => {
     const quantity = Number(item.quantity);
