@@ -67,8 +67,7 @@ function processOrderingList() {
   return { vList, npList };
 };
 
-function processLocationSheet(sheetName) {
-  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+function processLocationSheet(sheet) {
   let range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4);
   let data = range.getValues();
 
@@ -102,7 +101,7 @@ function writeMatchingResultsToSheet(sheet, data) {
   sheet.getRange('C1').activate().getFilter().sort(3, true);
   sheet.getRange('B1').activate().getFilter().sort(2, true);
   sheet.getRange('A1').activate().getFilter().sort(1, true);
-  sheet.autoResizeColumn(1);
+  sheet.setColumnWidth(1, 100);
   sheet.setColumnWidth(2, 150);
   sheet.setColumnWidth(3, 150);
   sheet.setColumnWidth(4, 200);
@@ -192,11 +191,11 @@ function writeNonMatchingResultsToSheet(sheet, data) {
     sheet.setColumnWidth(2, 150);
     sheet.setColumnWidth(1, 100);
     hideUnsortedNomoItems(sheet);
+    // findAndReplace(sheet, 3, "Coils", "Coil");
+    // findAndReplace(sheet, 3, "Pods", "Pod");
 };
 
-function hideNPVending() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName("North Port - Unlisted");
+function hideNPVending(sheet) {
   const lastRow = sheet.getLastRow();
   const valuesA = sheet.getRange(`A2:A${lastRow}`).getValues();
   const rowsToHide = new Set();
@@ -212,10 +211,9 @@ function hideNPVending() {
 };
 
 function compareLists() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
   let { vList, npList } = processOrderingList();
-  let veniceData = processLocationSheet("Alt Venice List");
-  let northPortData = processLocationSheet("Alt North Port List");
+  let veniceData = processLocationSheet(ss.getSheetByName("Alt Venice List"));
+  let northPortData = processLocationSheet(ss.getSheetByName("Alt North Port List"));
 
   let veniceItemNames = new Set(vList.map(item => item.itemName));
   let northPortItemNames = new Set(npList.map(item => item.itemName));
@@ -223,7 +221,7 @@ function compareLists() {
   let veniceMatches = vList.filter(item => 
     veniceData.some(row => 
       row[1] === item.itemName && (
-        row[0].includes(item.brand) || row[0].includes(item.subCat)
+        row[0] === item.brand || row[0].includes(item.subCat)
       )
     )
   );
@@ -231,7 +229,7 @@ function compareLists() {
   let northPortMatches = npList.filter(item => 
     northPortData.some(row => 
       row[1] === item.itemName && (
-        row[0].includes(item.brand) || row[0].includes(item.subCat)
+        row[0] === item.brand || row[0].includes(item.subCat)
       )
     )
   );
@@ -257,23 +255,23 @@ function compareLists() {
   createOrReplaceSheet(" | ");
 
   createOrReplaceSheet("Venice - Listed");
-  let veniceMatchSheet = ss.getSheetByName("Venice - Listed");
-  veniceMatchSheet.setTabColor(veniceColor);
-  writeMatchingResultsToSheet(veniceMatchSheet, veniceMatches);
+  const veniceListedSheet = ss.getSheetByName("Venice - Listed");
+  veniceListedSheet.setTabColor(veniceColor);
+  writeMatchingResultsToSheet(veniceListedSheet, veniceMatches);
 
   createOrReplaceSheet("Venice - Unlisted");
-  let veniceNonMatchingSheet = ss.getSheetByName("Venice - Unlisted");
-  veniceNonMatchingSheet.setTabColor(veniceColor);
-  writeNonMatchingResultsToSheet(veniceNonMatchingSheet, veniceNotInOrdering);
+  const veniceUnlistedSheet = ss.getSheetByName("Venice - Unlisted");
+  veniceUnlistedSheet.setTabColor(veniceColor);
+  writeNonMatchingResultsToSheet(veniceUnlistedSheet, veniceNotInOrdering);
 
   createOrReplaceSheet("North Port - Listed");
-  let northPortMatchSheet = ss.getSheetByName("North Port - Listed");
-  northPortMatchSheet.setTabColor(npColor);
-  writeMatchingResultsToSheet(northPortMatchSheet, northPortMatches);
+  const npListedSheet = ss.getSheetByName("North Port - Listed");
+  npListedSheet.setTabColor(npColor);
+  writeMatchingResultsToSheet(npListedSheet, northPortMatches);
 
   createOrReplaceSheet("North Port - Unlisted");
-  let npNonMatchingsSheet = ss.getSheetByName("North Port - Unlisted");
-  npNonMatchingsSheet.setTabColor(npColor);
-  writeNonMatchingResultsToSheet(npNonMatchingsSheet, northPortNotInOrdering);
-  hideNPVending();
+  const npUnlistedSheet = ss.getSheetByName("North Port - Unlisted");
+  npUnlistedSheet.setTabColor(npColor);
+  writeNonMatchingResultsToSheet(npUnlistedSheet, northPortNotInOrdering);
+  hideNPVending(npUnlistedSheet);
 };
