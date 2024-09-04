@@ -232,7 +232,7 @@ function compareLists() {
   );
 
   let veniceNotInOrdering = veniceData.filter(row => 
-    !veniceItemNames.has(row[1])
+    !veniceItemNames.includes(row[1])
   ).map(row => ({
     category: row[2],
     itemName: row[0],
@@ -241,7 +241,7 @@ function compareLists() {
   }));
 
   let npNotInOrdering = npData.filter(row => 
-    !npItemNames.has(row[1])
+    !npItemNames.includes(row[1])
   ).map(row => ({
     category: row[2],
     itemName: row[0],
