@@ -61,7 +61,6 @@ function findDateRange() {
 };
 
 function createDateNamedSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
   const { recentDate, oldestDate } = findDateRange();
   if (!recentDate || !oldestDate) return;
 
