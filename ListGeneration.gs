@@ -1,5 +1,19 @@
+const ss = SpreadsheetApp.getActiveSpreadsheet();
 const veniceColor = '#8d65db';
 const npColor = '#61b1d4';
+
+function findAndReplace(sheet, col, findText, replaceText) {
+  const range = sheet.getRange(2, col, sheet.getLastRow() - 1, 1);
+  const values = range.getValues();
+
+  for (let i = 0; i < values.length; i++) {
+    if (values[i][0].toString().includes(findText)) {
+      values[i][0] = values[i][0].toString().replace(findText, replaceText);
+    }
+  };
+
+  range.setValues(values);
+};
 
 function sumQuantities(data, key) {
   return Object.values(data.reduce((acc, item) => {
@@ -61,13 +75,12 @@ function createDateNamedSheet() {
 };
 
 function createOrReplaceSheet(sheetName) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(sheetName);
   if (sheet) ss.deleteSheet(sheet);
   ss.insertSheet(sheetName);
 };
 
-function processList(salesData, filterValue, sheetName, sumBy, sortByCategory, filterBy = "location") {
+function processList(salesData, filterValue, sheet, sumBy, sortByCategory, filterBy = "location") {
   let filteredData = salesData.filter(item => 
     item[filterBy] === filterValue && 
     item.category !== "Mighty Fine" && 
@@ -77,12 +90,10 @@ function processList(salesData, filterValue, sheetName, sumBy, sortByCategory, f
   if (sortByCategory) {
     summedData.sort((a, b) => a.category.localeCompare(b.category));
   }
-  writeDataByLocation(summedData, sheetName);
+  writeDataByLocation(summedData, sheet);
 };
 
-function writeDataByLocation(data, sheetName) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(sheetName);
+function writeDataByLocation(data, sheet) {
   sheet.getRange("A1").activate().setValue("");
   let headers = [["Item", "Variation", "Category", "Qty"]];
 
@@ -293,9 +304,9 @@ function altProcessLiquidSalesData(data, sheet) {
 };
 
 function updateProductLists() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
   const salesSheet = ss.getSheetByName("Sales");
-
+  findAndReplace(salesSheet, 5, "Coils", "Coil");
+  findAndReplace(salesSheet, 5, "Pods", "Pod");
   const data = salesSheet.getDataRange().getValues();
   const salesData = data.slice(1).map(row => ({
     date: row[0],                // Column A
@@ -311,26 +322,30 @@ function updateProductLists() {
   
   // Venice
   createOrReplaceSheet("Alt Venice List");
-  ss.getSheetByName("Alt Venice List").setTabColor(veniceColor);
-  processList(salesData, "Mighty Fine Flavors", "Alt Venice List", "variation", true);
-  formatList(ss.getSheetByName("Alt Venice List"));
+  const veniceListSheet = ss.getSheetByName("Alt Venice List");
+  veniceListSheet.setTabColor(veniceColor);
+  processList(salesData, "Mighty Fine Flavors", veniceListSheet, "variation", true);
+  formatList(veniceListSheet);
 
   // Venice Liquid
   createOrReplaceSheet("Alt Venice Liquid List");
-  ss.getSheetByName("Alt Venice Liquid List").setTabColor(veniceColor);
-  processLiquidSalesData(salesData, ss.getSheetByName("Alt Venice Liquid List"));
-  formatLiquidList(ss.getSheetByName("Alt Venice Liquid List"));
+  const veniceLiquidSheet = ss.getSheetByName("Alt Venice Liquid List");
+  veniceLiquidSheet.setTabColor(veniceColor);
+  processLiquidSalesData(salesData, veniceLiquidSheet);
+  formatLiquidList(veniceLiquidSheet);
 
   // North Port
   createOrReplaceSheet("Alt North Port List");
-  ss.getSheetByName("Alt North Port List").setTabColor(npColor);
-  processList(salesData, "Mighty Fine Vape & Smoke | North Port", "Alt North Port List", "variation", true);
-  formatList(ss.getSheetByName("Alt North Port List"));
+  const npListSheet = ss.getSheetByName("Alt North Port List");
+  npListSheet.setTabColor(npColor);
+  processList(salesData, "Mighty Fine Vape & Smoke | North Port", npListSheet, "variation", true);
+  formatList(npListSheet);
 
   // Alternate Venice Liquid
   createOrReplaceSheet("Alt Venice Liquid List (by Modifier)");
-  ss.getSheetByName("Alt Venice Liquid List (by Modifier)").setTabColor(veniceColor);
-  altProcessLiquidSalesData(salesData, ss.getSheetByName("Alt Venice Liquid List (by Modifier)"));
+  const altVeniceLiquidSheet = ss.getSheetByName("Alt Venice Liquid List (by Modifier)");
+  altVeniceLiquidSheet.setTabColor(veniceColor);
+  altProcessLiquidSalesData(salesData, altVeniceLiquidSheet);
 };
 
 function onOpen() {
