@@ -13,7 +13,7 @@ function processOrderingList() {
   let npList = [];
 
   data.forEach(row => {
-    row = row.map((value, index) => (index < 5 ? String(value).toLowerCase() : value));
+    row = row.map((value, index) => (index < 5 ? String(value).toLowerCase().trim() : value));
     if (row[7]) {
       let date = new Date(row[7]);
       row[7] = Utilities.formatDate(date, Session.getScriptTimeZone(), 'MM/dd/yy');
@@ -30,9 +30,9 @@ function processOrderingList() {
         orderDate: row[8]
     };
 
-    if (row[0] === 'v') {
+    if (row[0] === 'v' || row[0] === 'V') {
       vList.push(listItem);
-    } else if (row[0] === 'np') {
+    } else if (row[0] === 'np' || row[0] === 'NP') {
       npList.push(listItem);
     } else {
       vList.push(listItem);
@@ -218,7 +218,7 @@ function compareLists() {
   let veniceMatches = vList.filter(item => 
     veniceData.some(row => 
       row[1] === item.itemName && (
-        row[0] === item.brand || row[0].includes(item.subCat)
+        row[0] === item.brand || row[0] === item.subCat
       )
     )
   );
@@ -226,7 +226,7 @@ function compareLists() {
   let npMatches = npList.filter(item => 
     npData.some(row => 
       row[1] === item.itemName && (
-        row[0] === item.brand || row[0].includes(item.subCat)
+        row[0] === item.brand || row[0] === item.subCat
       )
     )
   );
@@ -272,108 +272,3 @@ function compareLists() {
   writeNonMatchingResultsToSheet(npUnlistedSheet, npNotInOrdering);
   hideNPVending(npUnlistedSheet);
 };
-
-// function processOrderingList() {
-//   let vList = [];
-//   let npList = [];
-//   let orderingListSpreadsheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/19rV2sw-JVJaYHYmG0xC5FrpqE9uGjKYKOdBOiwvBxI4/edit?gid=389276120#gid=389276120");
-//   let orderingSheet = orderingListSpreadsheet.getSheetByName("Ordering List");
-//   let range = orderingSheet.getRange(2, 1, orderingSheet.getLastRow(), 9);
-//   let data = range.getValues();
-//   data.forEach(row => {
-//     if (row[7]) {
-//       let date = new Date(row[7]);
-//       row[7] = Utilities.formatDate(date, Session.getScriptTimeZone(), 'MM/dd/yy');
-//     };
-
-//     let listItem = {
-//       itemName: String(row[4]).toLowerCase().trim(),
-//       brand: String(row[2]).toLowerCase().trim(),
-//       subCat: String(row[3]).toLowerCase().trim(),
-//       category: String(row[1]).toLowerCase().trim(),
-//       stock: Number(row[5]),
-//       sold: Number(row[6]),
-//       listDate: row[7],
-//       orderDate: row[8],
-//       productName: `${String(row[1]).toLowerCase().trim()} ${String(row[2]).toLowerCase().trim()} ${String(row[3]).toLowerCase().trim()} ${String(row[4]).toLowerCase().trim()}`
-//     };
-
-//     if (row[0] === 'v') {
-//       vList.push(listItem);
-//     } else if (row[0] === 'np') {
-//       npList.push(listItem);
-//     } else {
-//       vList.push(listItem);
-//       npList.push(listItem);
-//     };
-//   });
-  
-//   let transfersSheet = orderingListSpreadsheet.getSheetByName("Transfers");
-//   range = transfersSheet.getRange(2, 1, transfersSheet.getLastRow(), 9);
-//   data = range.getValues(); 
-//   data.forEach(row => {
-//     row = row.map((value, index) => (index < 5 ? String(value).toLowerCase() : value));
-//     if (row[7]) {
-//       let date = new Date(row[7]);
-//       row[7] = Utilities.formatDate(date, Session.getScriptTimeZone(), 'MM/dd/yy');
-//     };
-//     let transferItem = {
-//       itemName: String(row[4]).toLowerCase().trim(),
-//       brand: String(row[2]).toLowerCase().trim(),
-//       subCat: String(row[3]).toLowerCase().trim(),
-//       category: String(row[1]).toLowerCase().trim(),
-//       stock: Number(row[5]),
-//       sold: Number(row[6]),
-//       listDate: row[7],
-//       orderDate: row[8],
-//       productName: `${String(row[1]).toLowerCase().trim()} ${String(row[2]).toLowerCase().trim()} ${String(row[3]).toLowerCase().trim()} ${String(row[4]).toLowerCase().trim()}`
-//     };
-//     npList.push(transferItem);
-//   });
-
-//   return { vList, npList };
-// };
-
-// function processLocationSheet(sheet) {
-//   let processedData = [];
-//   let range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4);
-//   let data = range.getValues();
-
-//   data.forEach(row => {
-//     let listItem = {
-//       itemName: String(row[0]).toLowerCase().trim(),
-//       variation: String(row[1]).toLowerCase().trim(),
-//       category: String(row[2]).toLowerCase().trim(),
-//       qty: Number(row[3]),
-//       productName: `${String(row[2]).toLowerCase().trim()} ${String(row[0]).toLowerCase().trim()} ${String(row[1]).toLowerCase().trim()}`
-//     };
-//     processedData.push(listItem);
-//   });
-//   return processedData;
-// };
-
-// function compareLists() {
-//   let { vList, npList } = processOrderingList();
-//   let veniceData = processLocationSheet(ss.getSheetByName("Alt Venice List"));
-//   let npData = processLocationSheet(ss.getSheetByName("Alt North Port List"));
-
-//   let veniceProducts = new Set(vList.map(item => item.productName));
-//   let npProducts = new Set(npList.map(item => item.productName));
-
-//   let commonValues = [];
-//   let uniqueValues = [];
-
-//   veniceData.forEach(item => {
-//     if (veniceProducts.has(item.productName)) {
-//       commonValues.push(item);
-//     } else {
-//       uniqueValues.push(item);
-//     }
-//   });
-
-//   console.log("Common Values in Both Lists:");
-//   commonValues.forEach(value => console.log(value.productName));
-
-//   console.log("\nUnique Values in Data But Not in Lists:");
-//   uniqueValues.forEach(value => console.log(value.productName));
-// };
