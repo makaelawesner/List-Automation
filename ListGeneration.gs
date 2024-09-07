@@ -29,8 +29,8 @@ function sumQuantities(data, key) {
       sumKey = item.itemName;
     } else {
       sumKey = key === "variation" 
-        ? `${item.itemName} - ${item.variation}` 
-        : item.itemName;
+        ? `${item.category} - ${item.itemName} - ${item.variation}` 
+        : `${item.category} - ${item.itemName}`;
     }
     
     if (!acc[sumKey]) {
@@ -102,7 +102,6 @@ function writeDataByLocation(data, sheet) {
     if (variation.toLowerCase() === "wed nov 20 2024 00:00:00 gmt-0500 (eastern standard time)") {
       variation = "11-20";
     };
-
     if (!isNaN(Date.parse(variation))) {
       variation = "'" + variation;
     };
@@ -110,11 +109,25 @@ function writeDataByLocation(data, sheet) {
     if (!variation || variation === "Regular" || variation === "" || 
         item.category === "Kits" || item.category === "Mech" || 
         item.category === "Mods" || item.category === "Tanks") {
-      let parts = item.itemName.split("- ");
-      variation = parts.length > 1 ? parts[1] : "";
+      if (item.itemName.includes(" - ")) {
+        let parts = item.itemName.split("- ");
+        variation = parts.length > 1 ? parts[1] : "";
+      }
+      else {
+        variation = item.itemName;
+      };
     };
 
     if (item.category === "Cones") {
+      if (item.itemName.includes(" - ")) {
+      let parts = item.itemName.split(" - ");
+        if (parts.length > 1) {
+          variation = parts[0] + " - " + variation;
+        };
+      } else {
+        variation = item.itemName = " - " + variation;
+      };
+      item.itemName = "Cones";
       item.category = "SStash";
     };
 
@@ -156,10 +169,10 @@ function formatLiquidList(sheet) {
   sheet.getDataRange().applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
   sheet.setFrozenRows(1);
   sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).setHorizontalAlignment('center');
-  sheet.setColumnWidth(4, 50);
-  sheet.setColumnWidth(3, 150);
-  sheet.setColumnWidth(2, 200);
   sheet.setColumnWidth(1, 100);
+  sheet.setColumnWidth(2, 200);
+  sheet.setColumnWidth(3, 150);
+  sheet.setColumnWidth(4, 50);
 
   sheet.getDataRange().createFilter();
   sheet.getRange('C1').activate().getFilter().sort(3, true);
