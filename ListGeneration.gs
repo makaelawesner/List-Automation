@@ -94,8 +94,8 @@ function processList(salesData, filterValue, sheet, sumBy, sortByCategory, filte
 
 function writeDataByLocation(data, sheet) {
   sheet.getRange("A1").activate().setValue("");
-  let headers = [["Item", "Variation", "Category", "Qty"]];
-
+  let headers = [["On List?", "Item", "Variation", "Category", "Qty"]];
+  
   let rows = data.map(item => {
     let variation = String(item.variation);
 
@@ -112,15 +112,14 @@ function writeDataByLocation(data, sheet) {
       if (item.itemName.includes(" - ")) {
         let parts = item.itemName.split("- ");
         variation = parts.length > 1 ? parts[1] : "";
-      }
-      else {
+      } else {
         variation = item.itemName;
       };
     };
 
     if (item.category === "Cones") {
       if (item.itemName.includes(" - ")) {
-      let parts = item.itemName.split(" - ");
+        let parts = item.itemName.split(" - ");
         if (parts.length > 1) {
           variation = parts[0] + " - " + variation;
         };
@@ -135,23 +134,26 @@ function writeDataByLocation(data, sheet) {
   });
 
   sheet.getRange(1, 1, headers.length, headers[0].length).setValues(headers);
-  sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+  sheet.getRange(2, 2, rows.length, rows[0].length).setValues(rows);
+  
+  sheet.getRange(2, 1, rows.length).insertCheckboxes();
 };
 
 function formatList(sheet) {
   sheet.getDataRange().applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
   sheet.setFrozenRows(1);
   sheet.getRange(1, 1, 1, sheet.getLastColumn()).setHorizontalAlignment('center');
-  sheet.getRange(1, 2, sheet.getLastRow(), 3).setHorizontalAlignment('center');
-  sheet.setColumnWidth(4, 50);
-  sheet.setColumnWidth(3, 100);
-  sheet.setColumnWidth(2, 300);
-  sheet.setColumnWidth(1, 250);
+  sheet.getRange(1, 3, sheet.getLastRow(), 3).setHorizontalAlignment('center');
+  sheet.setColumnWidth(5, 50);
+  sheet.setColumnWidth(4, 100);
+  sheet.setColumnWidth(3, 300);
+  sheet.setColumnWidth(2, 250);
+  sheet.setColumnWidth(1, 85);
   
   sheet.getDataRange().createFilter();
-  sheet.getRange('B1').activate().getFilter().sort(2, true);
-  sheet.getRange('A1').activate().getFilter().sort(1, true);
   sheet.getRange('C1').activate().getFilter().sort(3, true);
+  sheet.getRange('B1').activate().getFilter().sort(2, true);
+  sheet.getRange('D1').activate().getFilter().sort(4, true);
   
   applyConditionalFormatting(sheet);
   hideUnsortedNomoItems(sheet);
@@ -317,8 +319,6 @@ function altProcessLiquidSalesData(data, sheet) {
 
 function updateProductLists() {
   const salesSheet = ss.getSheetByName("Sales");
-  findAndReplace(salesSheet, 5, "Coils", "Coil");
-  findAndReplace(salesSheet, 5, "Pods", "Pod");
   const data = salesSheet.getDataRange().getValues();
   const salesData = data.slice(1).map(row => ({
     date: row[0],                // Column A
